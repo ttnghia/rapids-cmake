@@ -108,7 +108,7 @@ function(rapids_cython_create_modules)
     cmake_path(REMOVE_EXTENSION extension_module)
 
     # Save the name of the module without the provided prefix so that we can control the output.
-    set(cython_module_filename "${extension_module}")
+    set(extension_module_filename "${extension_module}")
     string(PREPEND extension_module ${_RAPIDS_CYTHON_MODULE_PREFIX})
 
     list(GET RAPIDS_COMPILE_CREATED_TARGETS 0 cython_module)
