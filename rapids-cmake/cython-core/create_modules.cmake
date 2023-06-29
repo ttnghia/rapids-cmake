@@ -97,11 +97,8 @@ function(rapids_cython_create_modules)
     set(_RAPIDS_CYTHON_MODULE_PREFIX "")
   endif()
 
-  set(cython_module_prefix "${_RAPIDS_CYTHON_MODULE_PREFIX}cython_")
-  message("The module prefix for create_modules is ${_RAPIDS_CYTHON_MODULE_PREFIX}")
-  message("The module prefix for cython from create_modules is ${cython_module_prefix}")
   foreach(cython_filename IN LISTS _RAPIDS_CYTHON_SOURCE_FILES)
-    rapids_cython_compile(SOURCE_FILES ${cython_filename} PY3 ${language_flag} DIRECTIVES binding=True embedsignature=True always_allow_keywords=True TARGET_PREFIX ${cython_module_prefix})
+    rapids_cython_compile(SOURCE_FILES ${cython_filename} PY3 ${language_flag} DIRECTIVES binding=True embedsignature=True always_allow_keywords=True)
 
     # Generate a reasonable module name.
     cmake_path(GET cython_filename FILENAME extension_module)
@@ -111,9 +108,8 @@ function(rapids_cython_create_modules)
     set(extension_module_filename "${extension_module}")
     string(PREPEND extension_module ${_RAPIDS_CYTHON_MODULE_PREFIX})
 
-    list(GET RAPIDS_COMPILE_CREATED_TARGETS 0 cython_module)
-    message("Creating extension module ${extension_module} from target ${cython_module}")
-    python_add_library(${extension_module} MODULE ${cython_module})
+    list(GET RAPIDS_COMPILE_CREATED_FILES 0 transpiled_file)
+    python_add_library(${extension_module} MODULE ${transpiled_file})
 
     # The final library name must match the original filename and must ignore the prefix.
     set_target_properties(${extension_module} PROPERTIES LIBRARY_OUTPUT_NAME ${extension_module_filename})

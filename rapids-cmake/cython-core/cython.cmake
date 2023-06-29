@@ -25,7 +25,6 @@ The arguments to this function mirror the arguments to the Cython CLI.
 The only exceptions are:
 - Inputs are provided via the SOURCE_FILES parameter
 - The output filename is determined automatically from the input and cannot be customized
-- The TARGET_PREFIX allows prefixing all generated Cython targets to disambiguate targets created from Cython files with the same name at different paths.
 
 .. code-block:: cmake
 
@@ -57,7 +56,7 @@ function(rapids_cython_compile)
 
   # Each option corresponds to a command-line flag that accepts one argument.
   # We store the indexed mapping so that we can process them programmatically.
-  set(_rapids_cython_one_value OUTPUT_FILE CLEANUP WORKING GDB_OUTDIR EMBED MODULE_NAME TARGET_PREFIX)
+  set(_rapids_cython_one_value OUTPUT_FILE CLEANUP WORKING GDB_OUTDIR EMBED MODULE_NAME)
   set(_rapids_cython_one_value_has_default CLEANUP EMBED)
   set(_rapids_cython_one_value_flags -o --cleanup -w --gdb-outdir --embed --module-name)
 
@@ -111,10 +110,7 @@ function(rapids_cython_compile)
   
   # Handle one-value args
   list(LENGTH _rapids_cython_one_value num_one_value)
-  # TODO: Using -2 instead of -1 in order to skip the TARGET_PREFIX is a bit hacky.
-  # Would be nice to find a better solution. I'm not convinced that including a
-  # blank flag in the other list is a good alternative, though.
-  math(EXPR num_one_value "${num_one_value} - 2")
+  math(EXPR num_one_value "${num_one_value} - 1")
   foreach(i RANGE ${num_one_value})
     list(GET _rapids_cython_one_value ${i} option_name)
     list(GET _rapids_cython_one_value_vars ${i} option_var_name)
@@ -138,13 +134,6 @@ function(rapids_cython_compile)
       set(${option_var_name} "${option_flag} ${_RAPIDS_COMPILE_${option_name}}")
     endif()
   endforeach()
-
-  # Handle prefix separately
-  set(target_prefix)
-  if(DEFINED _RAPIDS_COMPILE_TARGET_PREFIX)
-    set(target_prefix ${_RAPIDS_COMPILE_TARGET_PREFIX})
-  endif()
-  message("The target prefix for cython is ${_RAPIDS_COMPILE_TARGET_PREFIX}, ${target_prefix}")
 
   # Now handle the multi-value args. These generally need different treatments
   if(NOT DEFINED _RAPIDS_COMPILE_SOURCE_FILES)
@@ -195,7 +184,7 @@ function(rapids_cython_compile)
   endif()
 
   # Maintain list of generated targets
-  set(CREATED_TARGETS "")
+  set(CREATED_FILES "")
 
   foreach(cython_filename IN LISTS _RAPIDS_COMPILE_SOURCE_FILES)
     cmake_path(GET cython_filename FILENAME cython_module)
@@ -212,16 +201,8 @@ function(rapids_cython_compile)
       COMMAND "${CYTHON}" ${args} "${CMAKE_CURRENT_SOURCE_DIR}/${cython_filename}" --output-file
               "${CMAKE_CURRENT_BINARY_DIR}/${cpp_filename}")
 
-    # TODO: Remove ALL, it's handy for testing but not what we want in the final result.
-    # TODO: Is supporting a target prefix the right answer here? I think we do
-    # need _some_ way to disambiguate, for example I imagine many packages have
-    # a utils.pyx sitting in different subpackages.
-    string(PREPEND cython_module ${target_prefix})
-    message("Creating cython module ${cython_module} from ${cython_filename}")
-    add_custom_target("${cython_module}" ALL DEPENDS ${cpp_filename})
-
-    list(APPEND CREATED_TARGETS "${cython_module}")
+    list(APPEND CREATED_FILES "${CMAKE_CURRENT_BINARY_DIR}/${cpp_filename}")
   endforeach()
 
-  set(RAPIDS_COMPILE_CREATED_TARGETS ${CREATED_TARGETS} PARENT_SCOPE)
+  set(RAPIDS_COMPILE_CREATED_FILES ${CREATED_FILES} PARENT_SCOPE)
 endfunction()
