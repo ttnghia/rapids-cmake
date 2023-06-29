@@ -77,10 +77,7 @@ function(rapids_cython_compile)
 
   # Handle all options
   list(LENGTH _rapids_cython_options num_options)
-  # Using -2 instead of -1 in order to skip the TARGET_PREFIX is a bit hacky.
-  # Would be nice to find a better solution. I'm not convinced that including a
-  # blank flag in the other list is a good alternative, though.
-  math(EXPR num_options "${num_options} - 2")
+  math(EXPR num_options "${num_options} - 1")
   foreach(i RANGE ${num_options})
     list(GET _rapids_cython_options ${i} option_name)
     list(GET _rapids_cython_option_vars ${i} option_var_name)
@@ -112,15 +109,12 @@ function(rapids_cython_compile)
     message(FATAL_ERROR "Only one of PY2, PY3, and PY3STR may be provided")
   endif()
   
-  # Handle prefix separately
-  set(target_prefix)
-  if(${_RAPIDS_COMPILE_TARGET_PREFIX})
-    set(target_prefix ${_RAPIDS_COMPILE_TARGET_PREFIX})
-  endif()
-
   # Handle one-value args
   list(LENGTH _rapids_cython_one_value num_one_value)
-  math(EXPR num_one_value "${num_one_value} - 1")
+  # TODO: Using -2 instead of -1 in order to skip the TARGET_PREFIX is a bit hacky.
+  # Would be nice to find a better solution. I'm not convinced that including a
+  # blank flag in the other list is a good alternative, though.
+  math(EXPR num_one_value "${num_one_value} - 2")
   foreach(i RANGE ${num_one_value})
     list(GET _rapids_cython_one_value ${i} option_name)
     list(GET _rapids_cython_one_value_vars ${i} option_var_name)
@@ -144,6 +138,12 @@ function(rapids_cython_compile)
       set(${option_var_name} "${option_flag} ${_RAPIDS_COMPILE_${option_name}}")
     endif()
   endforeach()
+
+  # Handle prefix separately
+  set(target_prefix)
+  if(${_RAPIDS_COMPILE_TARGET_PREFIX})
+    set(target_prefix ${_RAPIDS_COMPILE_TARGET_PREFIX})
+  endif()
 
   # Now handle the multi-value args. These generally need different treatments
   if(NOT DEFINED _RAPIDS_COMPILE_SOURCE_FILES)
@@ -215,7 +215,7 @@ function(rapids_cython_compile)
     # TODO: Is supporting a target prefix the right answer here? I think we do
     # need _some_ way to disambiguate, for example I imagine many packages have
     # a utils.pyx sitting in different subpackages.
-    string(PREPEND cython_module ${_RAPIDS_CYTHON_MODULE_PREFIX})
+    string(PREPEND cython_module ${target_prefix})
     add_custom_target("${cython_module}" ALL DEPENDS ${cpp_filename})
 
     list(APPEND CREATED_TARGETS "${cython_module}")
