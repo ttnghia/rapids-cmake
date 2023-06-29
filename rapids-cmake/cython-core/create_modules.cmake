@@ -109,7 +109,7 @@ function(rapids_cython_create_modules)
     string(PREPEND extension_module ${_RAPIDS_CYTHON_MODULE_PREFIX})
 
     list(GET RAPIDS_COMPILE_CREATED_FILES 0 transpiled_file)
-    python_add_library(${extension_module} MODULE ${transpiled_file})
+    python_add_library(${extension_module} MODULE WITH_SOABI ${transpiled_file})
 
     # The final library name must match the original filename and must ignore the prefix.
     set_target_properties(${extension_module} PROPERTIES LIBRARY_OUTPUT_NAME ${extension_module_filename})
