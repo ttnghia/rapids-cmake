@@ -193,6 +193,9 @@ function(rapids_cython_compile)
     set(_ext ".cxx")
   endif()
 
+  # Maintain list of generated targets
+  set(CREATED_TARGETS "")
+
   foreach(cython_filename IN LISTS _RAPIDS_COMPILE_SOURCE_FILES)
     cmake_path(GET cython_filename FILENAME cython_module)
     cmake_path(REPLACE_EXTENSION cython_module "${_ext}" OUTPUT_VARIABLE cpp_filename)
@@ -212,6 +215,11 @@ function(rapids_cython_compile)
     # TODO: Is supporting a target prefix the right answer here? I think we do
     # need _some_ way to disambiguate, for example I imagine many packages have
     # a utils.pyx sitting in different subpackages.
-    add_custom_target("${target_prefix}${cython_module}" ALL DEPENDS ${cpp_filename})
+    string(PREPEND cython_module ${_RAPIDS_CYTHON_MODULE_PREFIX})
+    add_custom_target("${cython_module}" ALL DEPENDS ${cpp_filename})
+
+    list(APPEND CREATED_TARGETS "${cython_module}")
   endforeach()
+
+  set(RAPIDS_COMPILE_CREATED_TARGETS ${CREATED_TARGETS} PARENT_SCOPE)
 endfunction()

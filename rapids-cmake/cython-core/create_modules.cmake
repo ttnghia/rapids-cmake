@@ -78,20 +78,18 @@ function(rapids_cython_create_modules)
 
   list(APPEND CMAKE_MESSAGE_CONTEXT "rapids.cython.create_modules")
 
+  include(${CMAKE_CURRENT_FUNCTION_LIST_DIR}/cython.cmake)
+
   set(_rapids_cython_options CXX)
   set(_rapids_cython_one_value INSTALL_DIR MODULE_PREFIX)
   set(_rapids_cython_multi_value SOURCE_FILES LINKED_LIBRARIES ASSOCIATED_TARGETS)
   cmake_parse_arguments(_RAPIDS_CYTHON "${_rapids_cython_options}" "${_rapids_cython_one_value}"
                         "${_rapids_cython_multi_value}" ${ARGN})
 
-  set(_directives "binding=True,embedsignature=True,always_allow_keywords=True")
-  set(_ext ".c")
-  set(_language_flag "")
+  set(language_flag "")
   if(_RAPIDS_CYTHON_CXX)
-    set(_language_flag "--cplus")
-    set(_ext ".cxx")
+    set(language_flag CPLUS)
   endif()
-
 
   set(CREATED_TARGETS "")
 
@@ -99,33 +97,27 @@ function(rapids_cython_create_modules)
     set(_RAPIDS_CYTHON_MODULE_PREFIX "")
   endif()
 
+  set(cython_module_prefix "${_RAPIDS_CYTHON_MODULE_PREFIX}cython_")
   foreach(cython_filename IN LISTS _RAPIDS_CYTHON_SOURCE_FILES)
+    rapids_cython_compile(SOURCE_FILES ${cython_filename} PY3 ${language_flag} DIRECTIVES binding=True embedsignature=True always_allow_keywords=True TARGET_PREFIX ${cython_module_prefix})
+
     # Generate a reasonable module name.
-    cmake_path(GET cython_filename FILENAME cython_module)
-    cmake_path(REPLACE_EXTENSION cython_module "${_ext}" OUTPUT_VARIABLE cpp_filename)
-    cmake_path(REMOVE_EXTENSION cython_module)
+    cmake_path(GET cython_filename FILENAME extension_module)
+    cmake_path(REMOVE_EXTENSION extension_module)
 
     # Save the name of the module without the provided prefix so that we can control the output.
-    set(cython_module_filename "${cython_module}")
-    string(PREPEND cython_module ${_RAPIDS_CYTHON_MODULE_PREFIX})
+    set(cython_module_filename "${extension_module}")
+    string(PREPEND extension_module ${_RAPIDS_CYTHON_MODULE_PREFIX})
 
-    # Generate C++ from Cython and create a library for the resulting extension module to compile.
-    # TODO: Probably want to generalize this to a helper function for invoking Cython.
-    add_custom_command(
-      OUTPUT ${cpp_filename}
-      DEPENDS ${cython_filename}
-      VERBATIM
-      COMMAND "${CYTHON}" "${_language_flag}" -3 --directive "${_directives}" "${CMAKE_CURRENT_SOURCE_DIR}/${cython_filename}" --output-file
-              "${CMAKE_CURRENT_BINARY_DIR}/${cpp_filename}")
-
-    python_add_library(${cython_module} MODULE "${CMAKE_CURRENT_BINARY_DIR}/${cpp_filename}")
+    list(GET RAPIDS_COMPILE_CREATED_TARGETS 0 cython_module)
+    python_add_library(${extension_module} MODULE ${cython_module})
 
     # The final library name must match the original filename and must ignore the prefix.
-    set_target_properties(${cython_module} PROPERTIES LIBRARY_OUTPUT_NAME ${cython_module_filename})
+    set_target_properties(${extension_module} PROPERTIES LIBRARY_OUTPUT_NAME ${extension_module_filename})
 
     # Link the module to the requested libraries
     if(DEFINED _RAPIDS_CYTHON_LINKED_LIBRARIES)
-      target_link_libraries(${cython_module} PUBLIC ${_RAPIDS_CYTHON_LINKED_LIBRARIES})
+      target_link_libraries(${extension_module} PUBLIC ${_RAPIDS_CYTHON_LINKED_LIBRARIES})
     endif()
 
     # Compute the install directory relative to the source and rely on installs being relative to
@@ -134,7 +126,7 @@ function(rapids_cython_create_modules)
       cmake_path(RELATIVE_PATH CMAKE_CURRENT_SOURCE_DIR BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
                  OUTPUT_VARIABLE _RAPIDS_CYTHON_INSTALL_DIR)
     endif()
-    install(TARGETS ${cython_module} DESTINATION ${_RAPIDS_CYTHON_INSTALL_DIR})
+    install(TARGETS ${extension_module} DESTINATION ${_RAPIDS_CYTHON_INSTALL_DIR})
 
     # Default the INSTALL_RPATH for all modules to $ORIGIN.
     if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
@@ -142,15 +134,15 @@ function(rapids_cython_create_modules)
     else()
       set(platform_rpath_origin "$ORIGIN")
     endif()
-    set_target_properties(${cython_module} PROPERTIES INSTALL_RPATH "${platform_rpath_origin}")
+    set_target_properties(${extension_module} PROPERTIES INSTALL_RPATH "${platform_rpath_origin}")
 
     # Store any provided associated targets in a global list
     foreach(associated_target IN LISTS _RAPIDS_CYTHON_ASSOCIATED_TARGETS)
       set_property(GLOBAL PROPERTY "rapids_cython_associations_${associated_target}"
-                                   "${cython_module}" APPEND)
+                                   "${extension_module}" APPEND)
     endforeach()
 
-    list(APPEND CREATED_TARGETS "${cython_module}")
+    list(APPEND CREATED_TARGETS "${extension_module}")
   endforeach()
 
   set(RAPIDS_CYTHON_CREATED_TARGETS ${CREATED_TARGETS} PARENT_SCOPE)
