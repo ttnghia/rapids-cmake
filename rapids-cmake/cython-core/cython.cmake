@@ -144,6 +144,7 @@ function(rapids_cython_compile)
   if(${_RAPIDS_COMPILE_TARGET_PREFIX})
     set(target_prefix ${_RAPIDS_COMPILE_TARGET_PREFIX})
   endif()
+  message("The target prefix for cython is ${_RAPIDS_COMPILE_TARGET_PREFIX}), ${target_prefix}")
 
   # Now handle the multi-value args. These generally need different treatments
   if(NOT DEFINED _RAPIDS_COMPILE_SOURCE_FILES)

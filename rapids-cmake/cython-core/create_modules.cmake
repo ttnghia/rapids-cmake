@@ -98,6 +98,8 @@ function(rapids_cython_create_modules)
   endif()
 
   set(cython_module_prefix "${_RAPIDS_CYTHON_MODULE_PREFIX}cython_")
+  message("The module prefix for create_modules is ${_RAPIDS_CYTHON_MODULE_PREFIX}")
+  message("The module prefix for cython from create_modules is ${cython_module_prefix}")
   foreach(cython_filename IN LISTS _RAPIDS_CYTHON_SOURCE_FILES)
     rapids_cython_compile(SOURCE_FILES ${cython_filename} PY3 ${language_flag} DIRECTIVES binding=True embedsignature=True always_allow_keywords=True TARGET_PREFIX ${cython_module_prefix})
 
