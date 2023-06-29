@@ -69,6 +69,11 @@ function(rapids_cython_compile)
   endforeach()
 
   # Multi-value arguments require bespoke logic and don't share preprocessing.
+  # TODO: Does it make sense to accept multiple files at once? It may not since
+  # downstream CMake code will always have to take the generated C++ and pass
+  # it to python_add_library and that accepts a list of source files, and there
+  # will have to be a correspondence between the generated extension module and
+  # the file.
   set(_rapids_cython_multi_value SOURCE_FILES INCLUDE_DIRS DIRECTIVES COMPILE_TIME_ENV)
 
   cmake_parse_arguments(_RAPIDS_COMPILE "${_rapids_cython_options}" "${_rapids_cython_one_value}"
