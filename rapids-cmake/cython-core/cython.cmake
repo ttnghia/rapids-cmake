@@ -216,6 +216,7 @@ function(rapids_cython_compile)
     # need _some_ way to disambiguate, for example I imagine many packages have
     # a utils.pyx sitting in different subpackages.
     string(PREPEND cython_module ${target_prefix})
+    message("Creating cython module ${cython_module} from ${cython_filename}")
     add_custom_target("${cython_module}" ALL DEPENDS ${cpp_filename})
 
     list(APPEND CREATED_TARGETS "${cython_module}")

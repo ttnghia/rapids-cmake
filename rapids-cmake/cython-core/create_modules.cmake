@@ -110,6 +110,7 @@ function(rapids_cython_create_modules)
     string(PREPEND extension_module ${_RAPIDS_CYTHON_MODULE_PREFIX})
 
     list(GET RAPIDS_COMPILE_CREATED_TARGETS 0 cython_module)
+    message("Creating extension module ${extension_module} from target ${cython_module}")
     python_add_library(${extension_module} MODULE ${cython_module})
 
     # The final library name must match the original filename and must ignore the prefix.
