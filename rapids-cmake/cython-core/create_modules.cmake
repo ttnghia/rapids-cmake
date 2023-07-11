@@ -86,9 +86,9 @@ function(rapids_cython_create_modules)
   cmake_parse_arguments(_RAPIDS_CYTHON "${_rapids_cython_options}" "${_rapids_cython_one_value}"
                         "${_rapids_cython_multi_value}" ${ARGN})
 
-  set(language_flag "")
+  set(target_language C)
   if(_RAPIDS_CYTHON_CXX)
-    set(language_flag CPLUS)
+    set(language_flag CXX)
   endif()
 
   set(CREATED_TARGETS "")
@@ -98,7 +98,8 @@ function(rapids_cython_create_modules)
   endif()
 
   foreach(cython_filename IN LISTS _RAPIDS_CYTHON_SOURCE_FILES)
-    rapids_cython_compile(SOURCE_FILES ${cython_filename} PY3 ${language_flag} DIRECTIVES binding=True embedsignature=True always_allow_keywords=True)
+      # TODO: Adding --embed-positions for testing
+      rapids_cython_compile(SOURCE_FILES ${cython_filename} LANGUAGE_LEVEL -3 TARGET_LANGUAGE ${target_language} CYTHON_ARGS --directive binding=True,embedsignature=True,always_allow_keywords=True --embed-positions)
 
     # Generate a reasonable module name.
     cmake_path(GET cython_filename FILENAME extension_module)
