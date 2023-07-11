@@ -166,13 +166,7 @@ function(rapids_cython_compile)
 
   # Combine arguments into a usable string
   set(args)
-  foreach(arg IN LISTS _rapids_cython_option_vars)
-    if(${arg})
-      set(args "${args} ${${arg}}")
-    endif()
-  endforeach()
-
-  foreach(arg IN LISTS _rapids_cython_one_value_vars)
+  foreach(arg IN LISTS _rapids_cython_option_vars _rapids_cython_one_value_vars)
     if(${arg})
       set(args "${args} ${${arg}}")
     endif()
