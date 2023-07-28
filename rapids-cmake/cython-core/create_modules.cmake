@@ -99,7 +99,7 @@ function(rapids_cython_create_modules)
 
   foreach(cython_filename IN LISTS _RAPIDS_CYTHON_SOURCE_FILES)
       # TODO: Adding --embed-positions for testing
-      rapids_cython_compile(SOURCE_FILES ${cython_filename} LANGUAGE_LEVEL -3 TARGET_LANGUAGE ${target_language} CYTHON_ARGS --directive binding=True,embedsignature=True,always_allow_keywords=True --embed-positions)
+      rapids_cython_compile(SOURCE_FILES ${cython_filename} LANGUAGE_LEVEL 3 TARGET_LANGUAGE ${target_language} CYTHON_ARGS --directive binding=True,embedsignature=True,always_allow_keywords=True --embed-positions)
 
     # Generate a reasonable module name.
     cmake_path(GET cython_filename FILENAME extension_module)
