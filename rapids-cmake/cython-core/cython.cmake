@@ -58,11 +58,11 @@ function(rapids_cython_compile)
 
   set(target_language "")
   set(extension ".c")
-  if(${_RAPIDS_COMPILE_LANGUAGE_LEVEL} STREQUAL "CXX")
+  if(${_RAPIDS_COMPILE_TARGET_LANGUAGE} STREQUAL "CXX")
     set(target_language "--cplus")
     set(extension ".cxx")
-  elseif(NOT ${_RAPIDS_COMPILE_LANGUAGE_LEVEL} STREQUAL "C")
-    message(FATAL_ERROR "LANGUAGE_LEVEL must be one of C or CXX")
+  elseif(NOT ${_RAPIDS_COMPILE_TARGET_LANGUAGE} STREQUAL "C")
+    message(FATAL_ERROR "TARGET_LANGUAGE must be one of C or CXX")
   endif()
 
   # Maintain list of generated targets
