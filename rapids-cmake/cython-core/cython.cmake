@@ -41,7 +41,7 @@ function(rapids_cython_compile)
 
   set(_rapids_cython_options)
   set(_rapids_cython_one_value TARGET_LANGUAGE LANGUAGE_LEVEL)
-  set(_rapids_cython_multi_value CYTHON_ARGS)
+  set(_rapids_cython_multi_value CYTHON_ARGS SOURCE_FILES)
 
   cmake_parse_arguments(_RAPIDS_COMPILE "${_rapids_cython_options}" "${_rapids_cython_one_value}"
                         "${_rapids_cython_multi_value}" ${ARGN})
