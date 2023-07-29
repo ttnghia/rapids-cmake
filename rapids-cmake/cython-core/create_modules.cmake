@@ -88,7 +88,7 @@ function(rapids_cython_create_modules)
 
   set(target_language C)
   if(_RAPIDS_CYTHON_CXX)
-    set(language_flag CXX)
+    set(target_language CXX)
   endif()
 
   set(CREATED_TARGETS "")
