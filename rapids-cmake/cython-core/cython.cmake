@@ -1,5 +1,5 @@
 # =============================================================================
-# Copyright (c) 2023 CORPORATION.
+# Copyright (c) 2023 NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -74,14 +74,16 @@ function(rapids_cython_compile)
     cmake_path(REPLACE_FILENAME cython_filename ${cpp_filename} OUTPUT_VARIABLE cpp_filename)
     cmake_path(REMOVE_EXTENSION cython_module)
 
-    add_custom_command(
-      OUTPUT ${cpp_filename}
-      DEPENDS ${cython_filename}
-      VERBATIM
-      # TODO: Is setting the input and output paths this way a robust solution,
-      # or are there cases where it might be problematic?
-      COMMAND "${CYTHON}" ${target_language} ${language_level} ${_RAPIDS_COMPILE_CYTHON_ARGS} "${CMAKE_CURRENT_SOURCE_DIR}/${cython_filename}" --output-file
-              "${CMAKE_CURRENT_BINARY_DIR}/${cpp_filename}")
+    add_custom_command(OUTPUT ${cpp_filename}
+                       DEPENDS ${cython_filename}
+                       VERBATIM
+                       COMMENT "Transpiling ${CMAKE_CURRENT_SOURCE_DIR}/${cython_filename} to ${CMAKE_CURRENT_SOURCE_DIR}/${cpp_filename}"
+                       # TODO: Is setting the input and output paths this way a robust solution, or
+                       # are there cases where it might be problematic?
+                       COMMAND "${CYTHON}" ${target_language} ${language_level}
+                               ${_RAPIDS_COMPILE_CYTHON_ARGS}
+                               "${CMAKE_CURRENT_SOURCE_DIR}/${cython_filename}" --output-file
+                               "${CMAKE_CURRENT_BINARY_DIR}/${cpp_filename}")
 
     list(APPEND CREATED_FILES "${CMAKE_CURRENT_BINARY_DIR}/${cpp_filename}")
   endforeach()

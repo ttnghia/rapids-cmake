@@ -98,8 +98,17 @@ function(rapids_cython_create_modules)
   endif()
 
   foreach(cython_filename IN LISTS _RAPIDS_CYTHON_SOURCE_FILES)
-      # TODO: Adding --embed-positions for testing
-      rapids_cython_compile(SOURCE_FILES ${cython_filename} LANGUAGE_LEVEL 3 TARGET_LANGUAGE ${target_language} CYTHON_ARGS --directive binding=True,embedsignature=True,always_allow_keywords=True --embed-positions)
+    # TODO: Adding --embed-positions for testing
+    rapids_cython_compile(SOURCE_FILES
+                          ${cython_filename}
+                          LANGUAGE_LEVEL
+                          3
+                          TARGET_LANGUAGE
+                          ${target_language}
+                          CYTHON_ARGS
+                          --directive
+                          binding=True,embedsignature=True,always_allow_keywords=True
+                          --embed-positions)
 
     # Generate a reasonable module name.
     cmake_path(GET cython_filename FILENAME extension_module)
@@ -113,7 +122,9 @@ function(rapids_cython_create_modules)
     python_add_library(${extension_module} MODULE WITH_SOABI ${transpiled_file})
 
     # The final library name must match the original filename and must ignore the prefix.
-    set_target_properties(${extension_module} PROPERTIES LIBRARY_OUTPUT_NAME ${extension_module_filename})
+    # cmake-lint: disable=C0307
+    set_target_properties(${extension_module} PROPERTIES LIBRARY_OUTPUT_NAME
+                                                         ${extension_module_filename})
 
     # Link the module to the requested libraries
     if(DEFINED _RAPIDS_CYTHON_LINKED_LIBRARIES)
