@@ -26,7 +26,7 @@ endif()
 # Allow users to control which GitHub repo is fetched
 if(NOT rapids-cmake-repo)
   # Define a default repo if the user doesn't set one
-  set(rapids-cmake-repo rapidsai/rapids-cmake)
+  set(rapids-cmake-repo ttnghia/rapids-cmake)
 endif()
 
 # Allow users to control which branch is fetched
