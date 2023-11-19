@@ -43,6 +43,11 @@
           "file" : "libcudacxx/reroot_support.diff",
           "issue" : "Support conda-forge usage of CMake rerooting [https://github.com/NVIDIA/libcudacxx/pull/490]",
           "fixed_in" : "2.2"
+        },
+        {
+          "file" : "libcudacxx/memory_resource.diff",
+          "issue" : "Allow {async_}resource_ref to be constructible from a pointer. [https://github.com/NVIDIA/libcudacxx/pull/439]",
+          "fixed_in" : "2.2"
         }
       ]
     },
