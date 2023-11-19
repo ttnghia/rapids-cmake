@@ -75,7 +75,7 @@
     },
     "rmm" : {
       "version" : "${rapids-cmake-version}",
-      "git_url" : "https://github.com/rapidsai/rmm.git",
+      "git_url" : "https://github.com/ttnghia/rmm.git",
       "git_tag" : "branch-${version}"
     },
     "spdlog" : {
