@@ -1,6 +1,6 @@
 # =============================================================================
 # cmake-format: off
-# SPDX-FileCopyrightText: Copyright (c) 2022-2025, NVIDIA CORPORATION.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2026, NVIDIA CORPORATION.
 # SPDX-License-Identifier: Apache-2.0
 # cmake-format: on
 # =============================================================================
@@ -19,7 +19,7 @@ Applies any relevant patches to the provided CPM package
   rapids_cpm_generate_patch_command(<pkg> <version> patch_command build_patch_only)
 
 #]=======================================================================]
-# cmake-lint: disable=R0915,E1120
+# cmake-lint: disable=R0912,R0915,E1120
 function(rapids_cpm_generate_patch_command package_name version patch_command build_patch_only)
   list(APPEND CMAKE_MESSAGE_CONTEXT "rapids.cpm.generate_patch_command")
 
@@ -28,16 +28,16 @@ function(rapids_cpm_generate_patch_command package_name version patch_command bu
 
   include("${rapids-cmake-dir}/cpm/detail/get_default_json.cmake")
   include("${rapids-cmake-dir}/cpm/detail/get_override_json.cmake")
-  get_default_json(${package_name} json_data)
-  get_override_json(${package_name} override_json_data)
+  get_default_json(${package_name} full_default_json)
+  get_override_json(${package_name} full_override_json)
 
   string(TOLOWER "${package_name}" normalized_pkg_name)
   get_property(json_path GLOBAL PROPERTY rapids_cpm_${normalized_pkg_name}_json_file)
   get_property(override_json_path GLOBAL
                PROPERTY rapids_cpm_${normalized_pkg_name}_override_json_file)
 
-  string(JSON json_data ERROR_VARIABLE no_default_patch GET "${json_data}" patches)
-  string(JSON override_json_data ERROR_VARIABLE no_override_patch GET "${override_json_data}"
+  string(JSON json_data ERROR_VARIABLE no_default_patch GET "${full_default_json}" patches)
+  string(JSON override_json_data ERROR_VARIABLE no_override_patch GET "${full_override_json}"
          patches)
   if(no_default_patch AND no_override_patch)
     return() # no patches
@@ -59,11 +59,35 @@ function(rapids_cpm_generate_patch_command package_name version patch_command bu
     endif()
   endfunction()
 
-  # Need Git to apply the patches
-  find_package(Git REQUIRED)
-  if(NOT GIT_EXECUTABLE)
-    message(WARNING "Unable to apply git patches to ${package_name}, git not found")
-    return()
+  # Determine if the package uses git or URL (tarball) mode to select the patch tool. An override
+  # that specifies git fields switches the package to git mode; an override that specifies url
+  # fields switches it to url mode. Otherwise fall back to the default JSON.
+  set(use_git_patch TRUE)
+  if(full_override_json)
+    string(JSON _v ERROR_VARIABLE no_url GET "${full_override_json}" url)
+    string(JSON _v ERROR_VARIABLE no_git_url GET "${full_override_json}" git_url)
+    if(no_url AND no_git_url)
+      string(JSON _v ERROR_VARIABLE no_url GET "${full_default_json}" url)
+    endif()
+  else()
+    string(JSON _v ERROR_VARIABLE no_url GET "${full_default_json}" url)
+  endif()
+  if(NOT no_url)
+    set(use_git_patch FALSE)
+  endif()
+
+  if(use_git_patch)
+    find_package(Git REQUIRED)
+    if(NOT GIT_EXECUTABLE)
+      message(WARNING "Unable to apply git patches to ${package_name}, git not found")
+      return()
+    endif()
+  else()
+    find_package(Patch REQUIRED)
+    if(NOT Patch_EXECUTABLE)
+      message(WARNING "Unable to apply patches to ${package_name}, patch not found")
+      return()
+    endif()
   endif()
   # For each project cache the subset of the json
   set(patch_files_to_run)

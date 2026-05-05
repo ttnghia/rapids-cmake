@@ -5,6 +5,8 @@
 
 set(msg_state)
 set(error_state)
+set(use_git_patch @use_git_patch@)
+
 function(rapids_cpm_run_git_patch file issue require)
   set(git_command @GIT_EXECUTABLE@)
   cmake_path(GET file FILENAME file_name)
@@ -67,6 +69,48 @@ function(rapids_cpm_run_git_patch file issue require)
   set(error_state ${error_state} PARENT_SCOPE)
 endfunction()
 
+function(rapids_cpm_run_patch file issue require)
+  set(patch_command @Patch_EXECUTABLE@)
+  cmake_path(GET file FILENAME file_name)
+  cmake_path(GET file_name EXTENSION LAST_ONLY ext)
+  string(SUBSTRING "${ext}" 1 -1 ext)
+
+  if(NOT (ext STREQUAL "diff" OR ext STREQUAL "patch") )
+    list(APPEND msg_state "rapids-cmake: Unable to apply ${file} as ${ext} is unsupported. Only .diff and .patch are supported")
+    set(msg_state ${msg_state} PARENT_SCOPE)
+    return()
+  endif()
+
+  set(result 1)
+  execute_process(
+    COMMAND ${patch_command} -p1 -i ${file}
+    RESULT_VARIABLE result
+    ERROR_VARIABLE repo_error_info
+  )
+  if(NOT result EQUAL 0)
+    # See if the patch was previously applied
+    execute_process(
+      COMMAND ${patch_command} -p1 --reverse --dry-run -i ${file}
+      RESULT_VARIABLE result
+    )
+  endif()
+
+  # Setup where we log error message too
+  set(error_msg_var msg_state)
+  if(require)
+    set(error_msg_var error_state)
+  endif()
+
+  if(result EQUAL 0)
+    list(APPEND msg_state "rapids-cmake [@package_name@]: applied ${ext} ${file_name} to fix issue: '${issue}'\n")
+  else()
+    list(APPEND ${error_msg_var} "rapids-cmake [@package_name@]: failed to apply ${ext} ${file_name}\n")
+    list(APPEND ${error_msg_var} "rapids-cmake [@package_name@]: patch output: ${repo_error_info}\n")
+  endif()
+  set(msg_state ${msg_state} PARENT_SCOPE)
+  set(error_state ${error_state} PARENT_SCOPE)
+endfunction()
+
 # We want to ensure that any patched files have a timestamp
 # that is at least 1 second newer compared to the git checkout
 # This ensures that all of CMake up-to-date install logic
@@ -83,7 +127,11 @@ set(required "@patch_required_to_apply@")
 set(output_file "@log_file@")
 set(error_file "@err_file@")
 foreach(file issue require IN ZIP_LISTS files issues required)
-  rapids_cpm_run_git_patch(${file} ${issue} ${require})
+  if(use_git_patch)
+    rapids_cpm_run_git_patch(${file} ${issue} ${require})
+  else()
+    rapids_cpm_run_patch(${file} ${issue} ${require})
+  endif()
 endforeach()
 if(msg_state)
   file(WRITE "${output_file}" ${msg_state})
